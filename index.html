@@ -7,6 +7,7 @@
     <meta name="description" content="Data real-time COVID-19 di Indonesia">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg: #0a0a0a;
@@ -30,7 +31,6 @@
         }
         a { color:inherit; text-decoration:none; }
 
-        /* NAV */
         nav {
             position:fixed; top:0; width:100%; z-index:100;
             padding:16px 0;
@@ -51,9 +51,8 @@
         }
         .nav-links a:hover { color:var(--text); }
 
-        /* HERO */
         .hero {
-            padding:120px 0 60px;
+            padding:120px 0 40px;
             text-align:center;
         }
         .hero-flag {
@@ -66,9 +65,7 @@
             margin-bottom:8px;
         }
         .hero h1 span { color:var(--red); }
-        .hero-sub {
-            color:var(--text-dim); font-size:.95rem;
-        }
+        .hero-sub { color:var(--text-dim); font-size:.95rem; }
         .update-time {
             margin-top:12px;
             display:inline-flex; align-items:center; gap:8px;
@@ -78,10 +75,8 @@
         }
         .update-time i { font-size:.7rem; }
 
-        /* MAIN */
         .wrap { max-width:900px; margin:0 auto; padding:0 24px; }
 
-        /* STATS GRID */
         .stats-grid {
             display:grid; grid-template-columns:repeat(2,1fr);
             gap:16px; margin-bottom:24px;
@@ -129,7 +124,6 @@
         .stat-today.up { background:rgba(239,68,68,0.15); color:var(--red); }
         .stat-today.down { background:rgba(34,197,94,0.15); color:var(--green); }
 
-        /* EXTRA INFO */
         .extra-grid {
             display:grid; grid-template-columns:repeat(3,1fr);
             gap:12px; margin-bottom:40px;
@@ -138,14 +132,51 @@
             background:var(--card); border:1px solid var(--border);
             border-radius:16px; padding:20px; text-align:center;
         }
-        .extra-value {
-            font-size:1.3rem; font-weight:700;
+        .extra-value { font-size:1.3rem; font-weight:700; }
+        .extra-label { font-size:.75rem; color:var(--text-dim); margin-top:4px; }
+
+        /* CHART SECTION */
+        .chart-section {
+            margin-bottom:40px;
         }
-        .extra-label {
-            font-size:.75rem; color:var(--text-dim); margin-top:4px;
+        .chart-title {
+            font-size:1.4rem; font-weight:700; letter-spacing:-0.5px;
+            margin-bottom:20px; display:flex; align-items:center; gap:12px;
+        }
+        .chart-title::before {
+            content:''; display:block; width:24px; height:2px;
+            background:var(--red);
+        }
+        .chart-card {
+            background:var(--card); border:1px solid var(--border);
+            border-radius:20px; padding:24px;
+            margin-bottom:16px;
+        }
+        .chart-header {
+            display:flex; justify-content:space-between; align-items:center;
+            margin-bottom:16px; flex-wrap:wrap; gap:12px;
+        }
+        .chart-label {
+            font-size:.9rem; font-weight:600;
+        }
+        .chart-filter {
+            display:flex; gap:8px;
+        }
+        .filter-btn {
+            padding:6px 14px; border-radius:100px;
+            font-size:.75rem; font-weight:600;
+            background:var(--card); border:1px solid var(--border);
+            color:var(--text-dim); cursor:pointer;
+            transition:all .2s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            border-color:var(--red); color:var(--red);
+            background:rgba(239,68,68,0.1);
+        }
+        .chart-container {
+            position:relative; height:300px;
         }
 
-        /* FOOTER */
         footer {
             padding:32px 0; text-align:center;
             border-top:1px solid var(--border);
@@ -153,7 +184,6 @@
         }
         footer a { color:var(--blue); }
 
-        /* LOADING */
         .loading {
             text-align:center; padding:100px 0;
             color:var(--text-dim);
@@ -161,7 +191,6 @@
         .loading i { font-size:2rem; animation:spin 1s linear infinite; }
         @keyframes spin { to { transform:rotate(360deg); } }
 
-        /* RESPONSIVE */
         @media(max-width:768px) {
             .hero h1 { font-size:1.8rem; }
             .stats-grid { grid-template-columns:1fr; }
@@ -170,6 +199,8 @@
             .extra-value { font-size:1rem; }
             .nav-links { display:none; }
             .stat-value { font-size:1.5rem; }
+            .chart-container { height:200px; }
+            .chart-filter { flex-wrap:wrap; }
         }
     </style>
 </head>
@@ -179,7 +210,8 @@
     <div class="nav-inner">
         <div class="logo">COVID-19<span>.</span></div>
         <ul class="nav-links">
-            <li><a href="https://github.com/Syaptiyan" target="_blank"><i class="fab fa-github"></i> GitHub</a></li>
+            <li><a href="https://syaptiyan.github.io" target="_blank"><i class="fas fa-arrow-left"></i> Portfolio</a></li>
+            <li><a href="https://github.com/Syaptiyan/corona" target="_blank"><i class="fab fa-github"></i> Source</a></li>
         </ul>
     </div>
 </nav>
@@ -188,7 +220,7 @@
     <div class="wrap">
         <img src="https://disease.sh/assets/img/flags/id.png" alt="Indonesia" class="hero-flag">
         <h1>COVID-19 <span>Indonesia</span></h1>
-        <p class="hero-sub">Data real-time perkembangan COVID-19 di Indonesia</p>
+        <p class="hero-sub">Data real-time & grafik perkembangan COVID-19 di Indonesia</p>
         <div class="update-time" id="update-time">
             <i class="fas fa-circle"></i> Memuat data...
         </div>
@@ -196,9 +228,56 @@
 </section>
 
 <div class="wrap">
-    <div id="content">
-        <div class="loading">
-            <i class="fas fa-spinner"></i>
+    <div id="stats-content">
+        <div class="loading"><i class="fas fa-spinner"></i></div>
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-title">Grafik Perkembangan</div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-label"><i class="fas fa-virus" style="color:var(--yellow)"></i> Total Kasus</div>
+                <div class="chart-filter">
+                    <button class="filter-btn active" onclick="filterChart('cases','all',this)">Semua</button>
+                    <button class="filter-btn" onclick="filterChart('cases','365',this)">1 Tahun</button>
+                    <button class="filter-btn" onclick="filterChart('cases','90',this)">3 Bulan</button>
+                    <button class="filter-btn" onclick="filterChart('cases','30',this)">30 Hari</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-cases"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-label"><i class="fas fa-skull-crossbones" style="color:var(--red)"></i> Kematian</div>
+                <div class="chart-filter">
+                    <button class="filter-btn active" onclick="filterChart('deaths','all',this)">Semua</button>
+                    <button class="filter-btn" onclick="filterChart('deaths','365',this)">1 Tahun</button>
+                    <button class="filter-btn" onclick="filterChart('deaths','90',this)">3 Bulan</button>
+                    <button class="filter-btn" onclick="filterChart('deaths','30',this)">30 Hari</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-deaths"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-label"><i class="fas fa-heart-pulse" style="color:var(--green)"></i> Sembuh</div>
+                <div class="chart-filter">
+                    <button class="filter-btn active" onclick="filterChart('recovered','all',this)">Semua</button>
+                    <button class="filter-btn" onclick="filterChart('recovered','365',this)">1 Tahun</button>
+                    <button class="filter-btn" onclick="filterChart('recovered','90',this)">3 Bulan</button>
+                    <button class="filter-btn" onclick="filterChart('recovered','30',this)">30 Hari</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-recovered"></canvas>
+            </div>
         </div>
     </div>
 </div>
@@ -211,6 +290,9 @@
 
 <script>
     const API_URL = 'https://disease.sh/v3/covid-19/countries/IDN';
+    const HIST_URL = 'https://disease.sh/v3/covid-19/historical/IDN?lastdays=all';
+    let charts = {};
+    let histData = {};
 
     function formatNumber(num) {
         return num ? num.toLocaleString('id-ID') : '0';
@@ -218,11 +300,10 @@
 
     function formatDate(timestamp) {
         const d = new Date(timestamp);
-        const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-        return d.toLocaleDateString('id-ID', options);
+        return d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
     }
 
-    async function fetchData() {
+    async function fetchStats() {
         try {
             const res = await fetch(API_URL);
             const data = await res.json();
@@ -230,7 +311,7 @@
             document.getElementById('update-time').innerHTML =
                 `<i class="fas fa-circle"></i> Update: ${formatDate(data.updated)}`;
 
-            document.getElementById('content').innerHTML = `
+            document.getElementById('stats-content').innerHTML = `
                 <div class="stats-grid">
                     <div class="stat-card cases">
                         <div class="stat-icon"><i class="fas fa-virus"></i></div>
@@ -273,12 +354,110 @@
                 </div>
             `;
         } catch (err) {
-            document.getElementById('content').innerHTML =
-                '<div class="loading"><p>Gagal memuat data. Coba refresh halaman.</p></div>';
+            document.getElementById('stats-content').innerHTML =
+                '<div class="loading"><p>Gagal memuat data.</p></div>';
         }
     }
 
-    fetchData();
+    function createChart(canvasId, labels, data, color, label) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, color + '40');
+        gradient.addColorStop(1, color + '05');
+
+        return new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    borderColor: color,
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHitRadius: 10,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1a1a1a',
+                        borderColor: '#333',
+                        borderWidth: 1,
+                        titleColor: '#fff',
+                        bodyColor: '#aaa',
+                        padding: 12,
+                        callbacks: {
+                            label: ctx => formatNumber(ctx.raw)
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#666', maxTicksLimit: 8, font: { size: 10 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: {
+                            color: '#666',
+                            font: { size: 10 },
+                            callback: v => v >= 1000000 ? (v/1000000).toFixed(0) + 'M' : v >= 1000 ? (v/1000).toFixed(0) + 'K' : v
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function filterChart(type, days, btn) {
+        btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const d = histData[type];
+        let labels = Object.keys(d);
+        let values = Object.values(d);
+
+        if (days !== 'all') {
+            labels = labels.slice(-parseInt(days));
+            values = values.slice(-parseInt(days));
+        }
+
+        const colors = { cases: '#eab308', deaths: '#ef4444', recovered: '#22c55e' };
+        const titles = { cases: 'Kasus', deaths: 'Kematian', recovered: 'Sembuh' };
+
+        if (charts[type]) charts[type].destroy();
+        charts[type] = createChart('chart-' + type, labels, values, colors[type], titles[type]);
+    }
+
+    async function fetchHistory() {
+        try {
+            const res = await fetch(HIST_URL);
+            const data = await res.json();
+            histData = data.timeline;
+
+            const colors = { cases: '#eab308', deaths: '#ef4444', recovered: '#22c55e' };
+            const titles = { cases: 'Kasus', deaths: 'Kematian', recovered: 'Sembuh' };
+
+            for (const type of ['cases', 'deaths', 'recovered']) {
+                const labels = Object.keys(histData[type]);
+                const values = Object.values(histData[type]);
+                charts[type] = createChart('chart-' + type, labels, values, colors[type], titles[type]);
+            }
+        } catch (err) {
+            console.error('Failed to fetch history:', err);
+        }
+    }
+
+    fetchStats();
+    fetchHistory();
 </script>
 
 </body>
