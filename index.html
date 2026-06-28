@@ -1,56 +1,285 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Cek Jumlah Konfirmasi, Kematian dan Kesembuhan Covid-19 Di Indonesia"/>
-    <title>Covid-19 di Indonesia</title>
-    <link rel="stylesheet" href="./src/css/style.css" />
-  </head>
-  <body id="tema">
-    <header>
-      <nav>
-        <h1>Covid-19 Indonesia</h1>
-        
-      </nav>
-    </header>
-    <main>
-      <section class="data">
-        <div class="data-angka">
-          <div id="konfirmasi">
-            <h3>Konfirmasi</h3>
-            <p id="value-konfirmasi">0</p>
-          </div>
-          <div id="sembuh">
-            <h3>Sembuh</h3>
-            <p id="value-sembuh">0</p>
-          </div>
-          <div id="meninggal">
-            <h3>Meninggal</h3>
-            <p id="value-meninggal">0</p>
-          </div>
-          
-        </div>
-        <span class="tanggal-data">
-          <strong>
-            <p>Tanggal Terakhir Update Data :</p>
-            <p><span id="value-tanggal">
-              
-            </span>
-            <center>
-             <p>#StayAtHome. by Ade Putra</p>
-            
-            <p>DATA API from <a href="https://covid19.mathdro.id/api">@Mathdroid</a></p>
-           </center>
-            </strong>
-          </p>
-        </span>
-      </section>
-    </strong>
-  </span>
-</section>
-</main>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COVID-19 Indonesia</title>
+    <meta name="description" content="Data real-time COVID-19 di Indonesia">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --card: #141414;
+            --card-hover: #1a1a1a;
+            --border: #222;
+            --text: #fafafa;
+            --text-dim: #888;
+            --red: #ef4444;
+            --green: #22c55e;
+            --yellow: #eab308;
+            --blue: #3b82f6;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Plus Jakarta Sans',sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            min-height:100vh;
+            -webkit-font-smoothing:antialiased;
+        }
+        a { color:inherit; text-decoration:none; }
 
-    <script defer src="./src/main.js"></script>
-  </body>
+        /* NAV */
+        nav {
+            position:fixed; top:0; width:100%; z-index:100;
+            padding:16px 0;
+            background:rgba(10,10,10,0.8);
+            backdrop-filter:blur(20px);
+            border-bottom:1px solid var(--border);
+        }
+        .nav-inner {
+            max-width:900px; margin:0 auto; padding:0 24px;
+            display:flex; justify-content:space-between; align-items:center;
+        }
+        .logo { font-weight:800; font-size:1.2rem; letter-spacing:-0.5px; }
+        .logo span { color:var(--red); }
+        .nav-links { display:flex; gap:28px; list-style:none; }
+        .nav-links a {
+            font-size:.85rem; font-weight:500; color:var(--text-dim);
+            transition:color .2s;
+        }
+        .nav-links a:hover { color:var(--text); }
+
+        /* HERO */
+        .hero {
+            padding:120px 0 60px;
+            text-align:center;
+        }
+        .hero-flag {
+            width:80px; height:52px; border-radius:8px;
+            object-fit:cover; margin-bottom:16px;
+            border:2px solid var(--border);
+        }
+        .hero h1 {
+            font-size:2.5rem; font-weight:800; letter-spacing:-1.5px;
+            margin-bottom:8px;
+        }
+        .hero h1 span { color:var(--red); }
+        .hero-sub {
+            color:var(--text-dim); font-size:.95rem;
+        }
+        .update-time {
+            margin-top:12px;
+            display:inline-flex; align-items:center; gap:8px;
+            padding:8px 16px; border-radius:100px;
+            background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2);
+            color:var(--blue); font-size:.8rem; font-weight:500;
+        }
+        .update-time i { font-size:.7rem; }
+
+        /* MAIN */
+        .wrap { max-width:900px; margin:0 auto; padding:0 24px; }
+
+        /* STATS GRID */
+        .stats-grid {
+            display:grid; grid-template-columns:repeat(2,1fr);
+            gap:16px; margin-bottom:24px;
+        }
+        .stat-card {
+            background:var(--card); border:1px solid var(--border);
+            border-radius:20px; padding:28px;
+            transition:all .2s; position:relative; overflow:hidden;
+        }
+        .stat-card:hover {
+            background:var(--card-hover);
+            transform:translateY(-2px);
+        }
+        .stat-card::before {
+            content:''; position:absolute; top:0; left:0; right:0;
+            height:3px; border-radius:20px 20px 0 0;
+        }
+        .stat-card.cases::before { background:var(--yellow); }
+        .stat-card.deaths::before { background:var(--red); }
+        .stat-card.recovered::before { background:var(--green); }
+        .stat-card.active::before { background:var(--blue); }
+
+        .stat-icon {
+            width:48px; height:48px; border-radius:14px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:1.2rem; margin-bottom:16px;
+        }
+        .stat-card.cases .stat-icon { background:rgba(234,179,8,0.15); color:var(--yellow); }
+        .stat-card.deaths .stat-icon { background:rgba(239,68,68,0.15); color:var(--red); }
+        .stat-card.recovered .stat-icon { background:rgba(34,197,94,0.15); color:var(--green); }
+        .stat-card.active .stat-icon { background:rgba(59,130,246,0.15); color:var(--blue); }
+
+        .stat-label {
+            font-size:.85rem; color:var(--text-dim); font-weight:500;
+            margin-bottom:4px;
+        }
+        .stat-value {
+            font-size:2rem; font-weight:800; letter-spacing:-1px;
+        }
+        .stat-today {
+            font-size:.8rem; font-weight:600; margin-top:8px;
+            display:inline-flex; align-items:center; gap:4px;
+            padding:4px 10px; border-radius:100px;
+        }
+        .stat-today.up { background:rgba(239,68,68,0.15); color:var(--red); }
+        .stat-today.down { background:rgba(34,197,94,0.15); color:var(--green); }
+
+        /* EXTRA INFO */
+        .extra-grid {
+            display:grid; grid-template-columns:repeat(3,1fr);
+            gap:12px; margin-bottom:40px;
+        }
+        .extra-card {
+            background:var(--card); border:1px solid var(--border);
+            border-radius:16px; padding:20px; text-align:center;
+        }
+        .extra-value {
+            font-size:1.3rem; font-weight:700;
+        }
+        .extra-label {
+            font-size:.75rem; color:var(--text-dim); margin-top:4px;
+        }
+
+        /* FOOTER */
+        footer {
+            padding:32px 0; text-align:center;
+            border-top:1px solid var(--border);
+            font-size:.8rem; color:var(--text-dim);
+        }
+        footer a { color:var(--blue); }
+
+        /* LOADING */
+        .loading {
+            text-align:center; padding:100px 0;
+            color:var(--text-dim);
+        }
+        .loading i { font-size:2rem; animation:spin 1s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* RESPONSIVE */
+        @media(max-width:768px) {
+            .hero h1 { font-size:1.8rem; }
+            .stats-grid { grid-template-columns:1fr; }
+            .extra-grid { grid-template-columns:1fr 1fr 1fr; gap:8px; }
+            .extra-card { padding:14px 8px; }
+            .extra-value { font-size:1rem; }
+            .nav-links { display:none; }
+            .stat-value { font-size:1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-inner">
+        <div class="logo">COVID-19<span>.</span></div>
+        <ul class="nav-links">
+            <li><a href="https://github.com/Syaptiyan" target="_blank"><i class="fab fa-github"></i> GitHub</a></li>
+        </ul>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="wrap">
+        <img src="https://disease.sh/assets/img/flags/id.png" alt="Indonesia" class="hero-flag">
+        <h1>COVID-19 <span>Indonesia</span></h1>
+        <p class="hero-sub">Data real-time perkembangan COVID-19 di Indonesia</p>
+        <div class="update-time" id="update-time">
+            <i class="fas fa-circle"></i> Memuat data...
+        </div>
+    </div>
+</section>
+
+<div class="wrap">
+    <div id="content">
+        <div class="loading">
+            <i class="fas fa-spinner"></i>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="wrap">
+        <p>Data dari <a href="https://disease.sh" target="_blank">disease.sh API</a> &middot; Dibuat oleh <a href="https://github.com/Syaptiyan" target="_blank">Syaptiyan Ade Putra</a></p>
+    </div>
+</footer>
+
+<script>
+    const API_URL = 'https://disease.sh/v3/covid-19/countries/IDN';
+
+    function formatNumber(num) {
+        return num ? num.toLocaleString('id-ID') : '0';
+    }
+
+    function formatDate(timestamp) {
+        const d = new Date(timestamp);
+        const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+        return d.toLocaleDateString('id-ID', options);
+    }
+
+    async function fetchData() {
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+
+            document.getElementById('update-time').innerHTML =
+                `<i class="fas fa-circle"></i> Update: ${formatDate(data.updated)}`;
+
+            document.getElementById('content').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card cases">
+                        <div class="stat-icon"><i class="fas fa-virus"></i></div>
+                        <div class="stat-label">Total Kasus</div>
+                        <div class="stat-value">${formatNumber(data.cases)}</div>
+                        <div class="stat-today up">+${formatNumber(data.todayCases)} hari ini</div>
+                    </div>
+                    <div class="stat-card deaths">
+                        <div class="stat-icon"><i class="fas fa-skull-crossbones"></i></div>
+                        <div class="stat-label">Kematian</div>
+                        <div class="stat-value">${formatNumber(data.deaths)}</div>
+                        <div class="stat-today up">+${formatNumber(data.todayDeaths)} hari ini</div>
+                    </div>
+                    <div class="stat-card recovered">
+                        <div class="stat-icon"><i class="fas fa-heart-pulse"></i></div>
+                        <div class="stat-label">Sembuh</div>
+                        <div class="stat-value">${formatNumber(data.recovered)}</div>
+                        <div class="stat-today down">+${formatNumber(data.todayRecovered)} hari ini</div>
+                    </div>
+                    <div class="stat-card active">
+                        <div class="stat-icon"><i class="fas fa-bed"></i></div>
+                        <div class="stat-label">Aktif</div>
+                        <div class="stat-value">${formatNumber(data.active)}</div>
+                        <div class="stat-today">${formatNumber(data.critical)} kritis</div>
+                    </div>
+                </div>
+                <div class="extra-grid">
+                    <div class="extra-card">
+                        <div class="extra-value">${formatNumber(data.tests)}</div>
+                        <div class="extra-label">Total Tes</div>
+                    </div>
+                    <div class="extra-card">
+                        <div class="extra-value">${formatNumber(data.population)}</div>
+                        <div class="extra-label">Populasi</div>
+                    </div>
+                    <div class="extra-card">
+                        <div class="extra-value">${formatNumber(data.casesPerOneMillion)}</div>
+                        <div class="extra-label">Kasus/1jt</div>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            document.getElementById('content').innerHTML =
+                '<div class="loading"><p>Gagal memuat data. Coba refresh halaman.</p></div>';
+        }
+    }
+
+    fetchData();
+</script>
+
+</body>
 </html>
