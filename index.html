@@ -760,12 +760,14 @@
     async function fetchComparison() {
         try {
             const res = await fetch(API_NEIGHBORS);
+            if (!res.ok) throw new Error('API error');
             const data = await res.json();
+            if (!statsData) return;
             const idn = statsData;
             const all = [idn, ...data].sort((a, b) => b.cases - a.cases);
             document.getElementById('compare-body').innerHTML = all.map((c, i) =>
                 `<tr class="${c.country === 'Indonesia' ? 'highlight' : ''}">
-                    <td><div class="country-cell"><span class="rank">#${i+1}</span><img src="${c.countryInfo.flag}" class="country-flag">${c.country}</div></td>
+                    <td><div class="country-cell"><span class="rank">#${i+1}</span><img src="${c.countryInfo.flag}" class="country-flag" onerror="this.style.display='none'">${c.country}</div></td>
                     <td>${formatNumber(c.cases)}</td>
                     <td>${formatNumber(c.deaths)}</td>
                     <td>${formatNumber(c.recovered)}</td>
@@ -773,7 +775,7 @@
                 </tr>`
             ).join('');
         } catch (err) {
-            document.getElementById('compare-body').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888">Gagal memuat data</td></tr>';
+            document.getElementById('compare-body').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">Gagal memuat data ASEAN</td></tr>';
         }
     }
 
@@ -790,9 +792,12 @@
     }
 
     // INIT
-    fetchStats();
-    fetchHistory();
-    fetchComparison();
+    async function init() {
+        await fetchStats();
+        await fetchHistory();
+        await fetchComparison();
+    }
+    init();
 
     // AUTO REFRESH
     setInterval(() => {
