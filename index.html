@@ -135,10 +135,7 @@
         .extra-value { font-size:1.3rem; font-weight:700; }
         .extra-label { font-size:.75rem; color:var(--text-dim); margin-top:4px; }
 
-        /* CHART SECTION */
-        .chart-section {
-            margin-bottom:40px;
-        }
+        .chart-section { margin-bottom:40px; }
         .chart-title {
             font-size:1.4rem; font-weight:700; letter-spacing:-0.5px;
             margin-bottom:20px; display:flex; align-items:center; gap:12px;
@@ -156,12 +153,8 @@
             display:flex; justify-content:space-between; align-items:center;
             margin-bottom:16px; flex-wrap:wrap; gap:12px;
         }
-        .chart-label {
-            font-size:.9rem; font-weight:600;
-        }
-        .chart-filter {
-            display:flex; gap:8px;
-        }
+        .chart-label { font-size:.9rem; font-weight:600; }
+        .chart-filter { display:flex; gap:8px; }
         .filter-btn {
             padding:6px 14px; border-radius:100px;
             font-size:.75rem; font-weight:600;
@@ -173,8 +166,23 @@
             border-color:var(--red); color:var(--red);
             background:rgba(239,68,68,0.1);
         }
-        .chart-container {
-            position:relative; height:300px;
+        .chart-container { position:relative; height:300px; }
+
+        /* MODE TOGGLE */
+        .mode-toggle {
+            display:flex; gap:8px; margin-bottom:20px;
+            justify-content:center;
+        }
+        .mode-btn {
+            padding:10px 24px; border-radius:100px;
+            font-size:.85rem; font-weight:600;
+            background:var(--card); border:1px solid var(--border);
+            color:var(--text-dim); cursor:pointer;
+            transition:all .2s;
+        }
+        .mode-btn:hover, .mode-btn.active {
+            border-color:var(--red); color:var(--red);
+            background:rgba(239,68,68,0.1);
         }
 
         footer {
@@ -201,6 +209,7 @@
             .stat-value { font-size:1.5rem; }
             .chart-container { height:200px; }
             .chart-filter { flex-wrap:wrap; }
+            .mode-toggle { flex-wrap:wrap; }
         }
     </style>
 </head>
@@ -235,10 +244,19 @@
     <div class="chart-section">
         <div class="chart-title">Grafik Perkembangan</div>
 
+        <div class="mode-toggle">
+            <button class="mode-btn active" onclick="switchMode('cumulative',this)">
+                <i class="fas fa-chart-line"></i> Kumulatif
+            </button>
+            <button class="mode-btn" onclick="switchMode('daily',this)">
+                <i class="fas fa-chart-bar"></i> Harian
+            </button>
+        </div>
+
         <div class="chart-card">
             <div class="chart-header">
-                <div class="chart-label"><i class="fas fa-virus" style="color:var(--yellow)"></i> Total Kasus</div>
-                <div class="chart-filter">
+                <div class="chart-label"><i class="fas fa-virus" style="color:var(--yellow)"></i> Kasus</div>
+                <div class="chart-filter" id="filter-cases">
                     <button class="filter-btn active" onclick="filterChart('cases','all',this)">Semua</button>
                     <button class="filter-btn" onclick="filterChart('cases','365',this)">1 Tahun</button>
                     <button class="filter-btn" onclick="filterChart('cases','90',this)">3 Bulan</button>
@@ -253,7 +271,7 @@
         <div class="chart-card">
             <div class="chart-header">
                 <div class="chart-label"><i class="fas fa-skull-crossbones" style="color:var(--red)"></i> Kematian</div>
-                <div class="chart-filter">
+                <div class="chart-filter" id="filter-deaths">
                     <button class="filter-btn active" onclick="filterChart('deaths','all',this)">Semua</button>
                     <button class="filter-btn" onclick="filterChart('deaths','365',this)">1 Tahun</button>
                     <button class="filter-btn" onclick="filterChart('deaths','90',this)">3 Bulan</button>
@@ -268,7 +286,7 @@
         <div class="chart-card">
             <div class="chart-header">
                 <div class="chart-label"><i class="fas fa-heart-pulse" style="color:var(--green)"></i> Sembuh</div>
-                <div class="chart-filter">
+                <div class="chart-filter" id="filter-recovered">
                     <button class="filter-btn active" onclick="filterChart('recovered','all',this)">Semua</button>
                     <button class="filter-btn" onclick="filterChart('recovered','365',this)">1 Tahun</button>
                     <button class="filter-btn" onclick="filterChart('recovered','90',this)">3 Bulan</button>
@@ -292,15 +310,29 @@
     const API_URL = 'https://disease.sh/v3/covid-19/countries/IDN';
     const HIST_URL = 'https://disease.sh/v3/covid-19/historical/IDN?lastdays=all';
     let charts = {};
-    let histData = {};
+    let rawData = {};
+    let currentMode = 'cumulative';
+    let currentFilter = { cases:'all', deaths:'all', recovered:'all' };
 
     function formatNumber(num) {
         return num ? num.toLocaleString('id-ID') : '0';
     }
 
-    function formatDate(timestamp) {
-        const d = new Date(timestamp);
-        return d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    function formatUpdateTime(ts) {
+        const d = new Date(ts);
+        const hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        return `${hari[d.getDay()]}, ${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()} pukul ${String(d.getHours()).padStart(2,'0')}.${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function getDailyData(cumulative) {
+        const keys = Object.keys(cumulative);
+        const values = Object.values(cumulative);
+        const daily = {};
+        for (let i = 1; i < keys.length; i++) {
+            daily[keys[i]] = Math.max(0, values[i] - values[i-1]);
+        }
+        return daily;
     }
 
     async function fetchStats() {
@@ -309,7 +341,7 @@
             const data = await res.json();
 
             document.getElementById('update-time').innerHTML =
-                `<i class="fas fa-circle"></i> Update: ${formatDate(data.updated)}`;
+                `<i class="fas fa-circle"></i> Update: ${formatUpdateTime(data.updated)}`;
 
             document.getElementById('stats-content').innerHTML = `
                 <div class="stats-grid">
@@ -359,26 +391,27 @@
         }
     }
 
-    function createChart(canvasId, labels, data, color, label) {
+    function createChart(canvasId, labels, data, color, label, isDaily) {
         const ctx = document.getElementById(canvasId).getContext('2d');
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
         gradient.addColorStop(0, color + '40');
         gradient.addColorStop(1, color + '05');
 
         return new Chart(ctx, {
-            type: 'line',
+            type: isDaily ? 'bar' : 'line',
             data: {
                 labels: labels,
                 datasets: [{
                     label: label,
                     data: data,
                     borderColor: color,
-                    backgroundColor: gradient,
-                    borderWidth: 2,
-                    fill: true,
+                    backgroundColor: isDaily ? color + '80' : gradient,
+                    borderWidth: isDaily ? 0 : 2,
+                    fill: !isDaily,
                     tension: 0.4,
                     pointRadius: 0,
                     pointHitRadius: 10,
+                    barPercentage: 0.8,
                 }]
             },
             options: {
@@ -417,13 +450,13 @@
         });
     }
 
-    function filterChart(type, days, btn) {
-        btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    function renderChart(type) {
+        const days = currentFilter[type];
+        const isDaily = currentMode === 'daily';
+        let data = isDaily ? getDailyData(rawData[type]) : rawData[type];
 
-        const d = histData[type];
-        let labels = Object.keys(d);
-        let values = Object.values(d);
+        let labels = Object.keys(data);
+        let values = Object.values(data);
 
         if (days !== 'all') {
             labels = labels.slice(-parseInt(days));
@@ -434,22 +467,33 @@
         const titles = { cases: 'Kasus', deaths: 'Kematian', recovered: 'Sembuh' };
 
         if (charts[type]) charts[type].destroy();
-        charts[type] = createChart('chart-' + type, labels, values, colors[type], titles[type]);
+        charts[type] = createChart('chart-' + type, labels, values, colors[type], titles[type], isDaily);
+    }
+
+    function filterChart(type, days, btn) {
+        btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter[type] = days;
+        renderChart(type);
+    }
+
+    function switchMode(mode, btn) {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentMode = mode;
+        for (const type of ['cases', 'deaths', 'recovered']) {
+            renderChart(type);
+        }
     }
 
     async function fetchHistory() {
         try {
             const res = await fetch(HIST_URL);
             const data = await res.json();
-            histData = data.timeline;
-
-            const colors = { cases: '#eab308', deaths: '#ef4444', recovered: '#22c55e' };
-            const titles = { cases: 'Kasus', deaths: 'Kematian', recovered: 'Sembuh' };
+            rawData = data.timeline;
 
             for (const type of ['cases', 'deaths', 'recovered']) {
-                const labels = Object.keys(histData[type]);
-                const values = Object.values(histData[type]);
-                charts[type] = createChart('chart-' + type, labels, values, colors[type], titles[type]);
+                renderChart(type);
             }
         } catch (err) {
             console.error('Failed to fetch history:', err);
