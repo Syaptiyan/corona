@@ -218,27 +218,37 @@
         .pie-container { position:relative; height:250px; }
 
         /* COMPARISON TABLE */
+        .compare-wrapper {
+            overflow-x:auto; margin-bottom:40px;
+            border:1px solid var(--border); border-radius:20px;
+        }
         .compare-table {
             width:100%; border-collapse:collapse;
-            background:var(--card); border:1px solid var(--border);
-            border-radius:20px; overflow:hidden;
-            margin-bottom:40px;
+            background:var(--card);
+            min-width:600px;
         }
         .compare-table th, .compare-table td {
-            padding:14px 16px; text-align:left;
+            padding:12px 14px; text-align:right;
             border-bottom:1px solid var(--border);
-            font-size:.85rem;
+            font-size:.8rem;
         }
         .compare-table th {
             background:rgba(255,255,255,0.03);
             color:var(--text-dim); font-weight:600;
-            font-size:.75rem; text-transform:uppercase;
+            font-size:.7rem; text-transform:uppercase;
         }
+        .compare-table th:first-child,
+        .compare-table td:first-child { text-align:left; }
         .compare-table tr:last-child td { border-bottom:none; }
         .compare-table tr:hover td { background:var(--card-hover); }
         .country-cell { display:flex; align-items:center; gap:10px; }
-        .country-flag { width:28px; border-radius:4px; }
-        .highlight { color:var(--yellow); font-weight:700; }
+        .country-flag { width:24px; border-radius:4px; }
+        .compare-table .highlight td {
+            background:rgba(239,68,68,0.05);
+            border-left:3px solid var(--red);
+        }
+        .compare-table .highlight td:first-child { border-left:none; }
+        .rank { color:var(--text-dim); font-size:.7rem; width:20px; }
 
         /* MILESTONE */
         .milestone-grid {
@@ -420,20 +430,21 @@
 
     <!-- COMPARISON -->
     <div id="compare">
-        <div class="section-title">Perbandingan Negara ASEAN</div>
-        <table class="compare-table">
-            <thead>
-                <tr>
-                    <th>Negara</th>
-                    <th>Total Kasus</th>
-                    <th>Kematian</th>
-                    <th>Sembuh</th>
-                    <th>Aktif</th>
-                    <th>Kematian/1jt</th>
-                </tr>
-            </thead>
-            <tbody id="compare-body"></tbody>
-        </table>
+        <div class="section-title">Perbandingan ASEAN</div>
+        <div class="compare-wrapper">
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th style="text-align:left">Negara</th>
+                        <th>Kasus</th>
+                        <th>Meninggal</th>
+                        <th>Sembuh</th>
+                        <th>Aktif</th>
+                    </tr>
+                </thead>
+                <tbody id="compare-body"></tbody>
+            </table>
+        </div>
     </div>
 
     <!-- MILESTONES -->
@@ -752,14 +763,13 @@
             const data = await res.json();
             const idn = statsData;
             const all = [idn, ...data].sort((a, b) => b.cases - a.cases);
-            document.getElementById('compare-body').innerHTML = all.map(c =>
+            document.getElementById('compare-body').innerHTML = all.map((c, i) =>
                 `<tr class="${c.country === 'Indonesia' ? 'highlight' : ''}">
-                    <td><div class="country-cell"><img src="${c.countryInfo.flag}" class="country-flag">${c.country}</div></td>
+                    <td><div class="country-cell"><span class="rank">#${i+1}</span><img src="${c.countryInfo.flag}" class="country-flag">${c.country}</div></td>
                     <td>${formatNumber(c.cases)}</td>
                     <td>${formatNumber(c.deaths)}</td>
                     <td>${formatNumber(c.recovered)}</td>
                     <td>${formatNumber(c.active)}</td>
-                    <td>${formatNumber(c.deathsPerOneMillion)}</td>
                 </tr>`
             ).join('');
         } catch (err) {
